@@ -2,10 +2,12 @@ function OauthAssistant() {
 
 	var oauthConfig = {
 		callbackScene: 'finishAuth', //Name of the assistant to be called on the OAuth Success
-		requestTokenUrl: 'https://api.twitter.com/oauth/request_token',
+		oauthSignUrl: 'https://api.twitter.com',
+		oauthApiUrl: 'http://www.genzj.ssh.x-sword.com/zuoye/t',
+		requestTokenUrl: '/oauth/request_token',
 		requestTokenMethod: 'GET', // Optional - 'GET' by default if not specified
-		authorizeUrl: 'https://api.twitter.com/oauth/authorize',
-		accessTokenUrl: 'https://api.twitter.com/oauth/access_token',
+		authorizeUrl: '/oauth/authorize',
+		accessTokenUrl: '/oauth/access_token',
 		accessTokenMethod: 'GET', // Optional - 'GET' by default if not specified
 		consumer_key: Config.key,
 		consumer_key_secret: Config.secret,
@@ -18,9 +20,11 @@ function OauthAssistant() {
 	this.method=null;
 	this.oauth_verifier=null;
 	this.callbackScene=oauthConfig.callbackScene;
-	this.requestTokenUrl=oauthConfig.requestTokenUrl;
-	this.authorizeUrl=oauthConfig.authorizeUrl;
-	this.accessTokenUrl=oauthConfig.accessTokenUrl;
+	this.oauthApiUrl=oauthConfig.oauthApiUrl;
+	this.oauthSignUrl=oauthConfig.oauthSignUrl;
+	this.requestTokenUrl=this.oauthApiUrl+oauthConfig.requestTokenUrl;
+	this.authorizeUrl=this.oauthApiUrl+oauthConfig.authorizeUrl;
+	this.accessTokenUrl=this.oauthApiUrl+oauthConfig.accessTokenUrl;
 	this.consumer_key=oauthConfig.consumer_key;
 	this.consumer_key_secret=oauthConfig.consumer_key_secret;
 	if(oauthConfig.callback!=undefined)
@@ -83,9 +87,10 @@ OauthAssistant.prototype.signHeader = function (params){
 	if(this.method==undefined)
 		this.method='GET';
 	var timestamp=OAuth.timestamp();
-	var nonce=OAuth.nonce(11);
+	var nonce=OAuth.nonce(43);
+	var signurl=this.url.replace(this.oauthApiUrl, this.oauthSignUrl);
 	this.accessor = {consumerSecret: this.consumer_key_secret, tokenSecret : this.tokenSecret};
-	this.message = {method: this.method, action: this.url, parameters: OAuth.decodeForm(params)};
+	this.message = {method: this.method, action: signurl, parameters: OAuth.decodeForm(params)};
 	this.message.parameters.push(['oauth_consumer_key',this.consumer_key]);
 	this.message.parameters.push(['oauth_nonce',nonce]);
 	this.message.parameters.push(['oauth_signature_method','HMAC-SHA1']);
@@ -105,7 +110,7 @@ OauthAssistant.prototype.requestToken = function (){
 	new Ajax.Request(this.url,{
 	method: this.method,
 	encoding: 'UTF-8',
-	requestHeaders:['Authorization',this.authHeader],
+	requestHeaders:['Oauthauthorization',this.authHeader],
 	onComplete:function(response){
 		//ex(response.responseText);
 		var response_text=response.responseText;
@@ -133,7 +138,7 @@ OauthAssistant.prototype.exchangeToken = function (token){
 	new Ajax.Request(this.url,{
 		method: this.method,
 		encoding: 'UTF-8',
-		requestHeaders:['Authorization',this.authHeader],
+		requestHeaders:['Oauthauthorization',this.authHeader],
 		onComplete:function(response){
 			var response_text = response.responseText;
 			this.controller.stageController.swapScene({name:this.callbackScene},{source:'oauth',response:response_text});
