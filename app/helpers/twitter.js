@@ -2,7 +2,8 @@
 // TODO: Allow custom API (for Chinese users) 
 var TwitterAPI = function(user, stageController) {
 	
-	this.apibase = 'https://api.twitter.com';
+	this.signapibase = 'https://api.twitter.com';
+	this.apibase = 'http://www.genzj.ssh.x-sword.com/zuoye/t';
 	this.version = '1'; // will probably have to change a lot more than just this number once v2 hits
 	this.key = Config.key;
 	this.secret = Config.secret;
@@ -205,10 +206,12 @@ TwitterAPI.prototype = {
 		//meta is an object literal with data that needs to be passed through to the callback
 		
 		var i; //to make JSLint shut up.
+		var signurl=url.replace(this.apibase, this.signapibase);
+		args.oauth_nonce=OAuth.nonce(43);
 
 		var message = {
 			method: httpMethod,
-			action: url,
+			action: signurl,
 			parameters: []
 		};
 
@@ -218,11 +221,12 @@ TwitterAPI.prototype = {
 		var params = '';
 
 		for (var key in args) {
+			message.parameters.push([key, args[key]]);
+			if (key === 'oauth_nonce') continue;
 			if (params !== '') {
 				params += '&';
 			}
 			params += key + '=' + encodeURIComponent(args[key]);
-			message.parameters.push([key, args[key]]);
 		}
 
 		OAuth.completeRequest(message, {
@@ -238,7 +242,7 @@ TwitterAPI.prototype = {
 			method: httpMethod,
 			encoding: 'UTF-8',
 			requestHeaders: {
-				Authorization: authHeader,
+				Oauthauthorization: authHeader,
 				Accept: 'application/json'
 			},
 			parameters: params,
